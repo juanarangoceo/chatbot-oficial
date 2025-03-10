@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template_string
+from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
 import os
@@ -7,6 +8,7 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)  # Habilitar CORS para todas las rutas
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # HTML template para la página de prueba
@@ -219,12 +221,23 @@ MANEJO DE OBJECIONES:
 def home():
     return render_template_string(HTML_TEMPLATE)
 
-@app.route('/chat', methods=['POST'])
+@app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
+    if request.method == 'OPTIONS':
+        # Manejar la solicitud preflight OPTIONS
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+
     try:
         data = request.json
         user_message = data.get('message', '')
         chat_history = data.get('history', [])
+
+        print(f"Mensaje recibido: {user_message}")  # Log para debugging
+        print(f"Historial: {chat_history}")  # Log para debugging
 
         # Preparar los mensajes para la API
         messages = [
@@ -254,6 +267,7 @@ def chat():
 
         # Extraer la respuesta
         bot_response = response.choices[0].message['content']
+        print(f"Respuesta del bot: {bot_response}")  # Log para debugging
 
         return jsonify({
             "response": bot_response,
@@ -261,6 +275,7 @@ def chat():
         })
 
     except Exception as e:
+        print(f"Error: {str(e)}")  # Log para debugging
         return jsonify({
             "error": str(e),
             "status": "error"

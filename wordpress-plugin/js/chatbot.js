@@ -1,10 +1,12 @@
 jQuery(document).ready(function($) {
+    const chatLauncher = $('#chat-launcher');
     const chatbotContainer = $('#chatbot-container');
     const messagesContainer = chatbotContainer.find('.chatbot-messages');
     const input = chatbotContainer.find('input');
     const sendButton = chatbotContainer.find('.chatbot-send');
     const toggleButton = chatbotContainer.find('.chatbot-toggle');
     let chatHistory = [];
+    let isFirstOpen = true;
 
     // Función para agregar mensajes al chat
     function addMessage(message, isUser = false) {
@@ -16,7 +18,6 @@ jQuery(document).ready(function($) {
         messagesContainer.append(messageElement);
         messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
         
-        // Actualizar historial del chat
         chatHistory.push({
             role: isUser ? 'user' : 'assistant',
             content: message
@@ -57,19 +58,46 @@ jQuery(document).ready(function($) {
         }
     }
 
-    // Event listeners
+    // Event listeners para enviar mensajes
     sendButton.on('click', handleSend);
     input.on('keypress', function(e) {
-        if (e.which === 13) {
+        if (e.key === 'Enter') {
             handleSend();
         }
     });
 
-    // Toggle chatbot visibility
-    toggleButton.on('click', function() {
+    // Manejar la visibilidad del chatbot
+    function toggleChat() {
         chatbotContainer.toggleClass('minimized');
-    });
+        chatLauncher.toggleClass('hidden');
+        
+        if (!chatbotContainer.hasClass('minimized') && isFirstOpen) {
+            // Mensaje inicial solo la primera vez que se abre
+            addMessage('¡Hola! Soy Juan, tu barista y asesor experto en café. ¿En qué ciudad te encuentras para verificar la disponibilidad de envío gratuito? 😊', false);
+            isFirstOpen = false;
+        }
 
-    // Mensaje inicial
-    addMessage('¡Hola! Soy Juan, tu barista y asesor experto en café. ¿En qué ciudad te encuentras para verificar la disponibilidad de envío gratuito? 😊');
+        if (!chatbotContainer.hasClass('minimized')) {
+            input.focus();
+        }
+    }
+
+    // Event listeners para abrir/cerrar el chat
+    chatLauncher.on('click', toggleChat);
+    toggleButton.on('click', toggleChat);
+
+    // Guardar estado del chat en localStorage
+    const chatState = localStorage.getItem('chatbotState');
+    if (chatState === 'open') {
+        toggleChat();
+    }
+
+    // Actualizar estado en localStorage
+    function updateChatState() {
+        const state = chatbotContainer.hasClass('minimized') ? 'closed' : 'open';
+        localStorage.setItem('chatbotState', state);
+    }
+
+    chatLauncher.on('click', updateChatState);
+    toggleButton.on('click', updateChatState);
 }); 
