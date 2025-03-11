@@ -26,6 +26,15 @@ jQuery(document).ready(function($) {
 
     // Función para enviar mensaje al servidor
     function sendMessage(message) {
+        if (!message || message.trim() === '') return;
+        
+        console.log('Enviando mensaje:', message);
+        console.log('Chat history:', chatHistory);
+        
+        // Deshabilitar el botón de envío y el input mientras se procesa
+        sendButton.prop('disabled', true);
+        input.prop('disabled', true);
+        
         $.ajax({
             url: chatbotAjax.ajaxurl,
             type: 'POST',
@@ -36,14 +45,23 @@ jQuery(document).ready(function($) {
                 history: chatHistory
             },
             success: function(response) {
-                if (response.success && response.data.response) {
+                console.log('Respuesta recibida:', response);
+                if (response.success && response.data && response.data.response) {
                     addMessage(response.data.response);
                 } else {
+                    console.error('Error en la respuesta:', response);
                     addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('Error en la petición:', {xhr, status, error});
                 addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
+            },
+            complete: function() {
+                // Re-habilitar el botón de envío y el input
+                sendButton.prop('disabled', false);
+                input.prop('disabled', false);
+                input.focus();
             }
         });
     }
@@ -59,32 +77,80 @@ jQuery(document).ready(function($) {
     }
 
     // Event listeners para enviar mensajes
-    sendButton.on('click', handleSend);
+    sendButton.on('click touchstart', function(e) {
+        e.preventDefault();
+        handleSend();
+    });
+
     input.on('keypress', function(e) {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
             handleSend();
         }
     });
 
     // Manejar la visibilidad del chatbot
-    function toggleChat() {
+    function toggleChat(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
         chatbotContainer.toggleClass('minimized');
         chatLauncher.toggleClass('hidden');
         
-        if (!chatbotContainer.hasClass('minimized') && isFirstOpen) {
-            // Mensaje inicial solo la primera vez que se abre
-            addMessage('¡Hola! Soy Juan, tu barista y asesor experto en café. ¿En qué ciudad te encuentras para verificar la disponibilidad de envío gratuito? 😊', false);
-            isFirstOpen = false;
-        }
-
         if (!chatbotContainer.hasClass('minimized')) {
+            if (isFirstOpen) {
+                addMessage('¡Hola! Soy Juan, tu barista y asesor experto en café. ¿En qué ciudad te encuentras para verificar la disponibilidad de envío gratuito? 😊', false);
+                isFirstOpen = false;
+            }
             input.focus();
+            
+            // Ajustar la posición del scroll en móviles
+            if (window.innerWidth <= 480) {
+                setTimeout(function() {
+                    window.scrollTo(0, document.body.scrollHeight);
+                }, 300);
+            }
         }
     }
 
     // Event listeners para abrir/cerrar el chat
-    chatLauncher.on('click', toggleChat);
-    toggleButton.on('click', toggleChat);
+    chatLauncher.on('click touchstart', function(e) {
+        e.preventDefault();
+        toggleChat(e);
+        updateChatState();
+    });
+
+    toggleButton.on('click touchstart', function(e) {
+        e.preventDefault();
+        toggleChat(e);
+        updateChatState();
+    });
+
+    // Prevenir que el toque en el contenedor del chat cierre el teclado móvil
+    chatbotContainer.on('touchstart', function(e) {
+        if (!$(e.target).is(input) && !$(e.target).is(sendButton)) {
+            e.preventDefault();
+        }
+    });
+
+    // Ajustar el tamaño en orientación móvil
+    $(window).on('resize orientationchange', function() {
+        if (!chatbotContainer.hasClass('minimized')) {
+            if (window.innerWidth <= 480) {
+                chatbotContainer.css({
+                    'height': window.innerHeight + 'px',
+                    'max-height': window.innerHeight + 'px'
+                });
+            } else {
+                chatbotContainer.css({
+                    'height': '',
+                    'max-height': ''
+                });
+            }
+        }
+    });
 
     // Guardar estado del chat en localStorage
     const chatState = localStorage.getItem('chatbotState');
@@ -97,7 +163,4 @@ jQuery(document).ready(function($) {
         const state = chatbotContainer.hasClass('minimized') ? 'closed' : 'open';
         localStorage.setItem('chatbotState', state);
     }
-
-    chatLauncher.on('click', updateChatState);
-    toggleButton.on('click', updateChatState);
 }); 
