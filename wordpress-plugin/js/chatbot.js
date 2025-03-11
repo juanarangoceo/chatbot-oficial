@@ -1,5 +1,5 @@
 jQuery(document).ready(function($) {
-    console.log('Inicializando chatbot v1.0.4...');
+    console.log('Inicializando chatbot v1.0.5...');
     
     const chatLauncher = $('#chat-launcher');
     const chatbotContainer = $('#chatbot-container');
@@ -130,23 +130,20 @@ jQuery(document).ready(function($) {
         }
     }
 
-    // Event listeners para el botón de cerrar
-    toggleButton.on('touchstart click', function(e) {
-        console.log('Evento en botón cerrar:', e.type);
-        e.preventDefault();
-        e.stopPropagation();
-        toggleChat();
-        return false;
-    });
+    // Event listeners para el botón de cerrar en desktop
+    if (!isMobile) {
+        toggleButton.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleChat();
+        });
 
-    // Event listener para el launcher
-    chatLauncher.on('touchstart click', function(e) {
-        console.log('Evento en launcher:', e.type);
-        e.preventDefault();
-        e.stopPropagation();
-        toggleChat();
-        return false;
-    });
+        chatLauncher.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleChat();
+        });
+    }
 
     // Prevenir comportamiento por defecto en móviles
     if (isMobile) {
