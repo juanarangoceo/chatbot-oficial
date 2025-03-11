@@ -38,7 +38,8 @@ jQuery(document).ready(function($) {
     function sendMessage(message) {
         if (!message || message.trim() === '') return;
         
-        console.log('Iniciando envío de mensaje:', message);
+        console.log('Inicializando envío de mensaje...');
+        console.log('Configuración del chatbot:', window.chatbotConfig);
         
         input.prop('disabled', true);
         sendButton.prop('disabled', true);
@@ -50,18 +51,26 @@ jQuery(document).ready(function($) {
 
         console.log('Datos a enviar:', requestData);
         
-        fetch('https://chatbot-oficial.onrender.com/chat', {
+        // Usar la URL configurada en WordPress
+        const serverUrl = window.chatbotConfig ? window.chatbotConfig.serverUrl : 'https://chatbot-oficial.onrender.com/chat';
+        console.log('URL del servidor a usar:', serverUrl);
+        
+        fetch(serverUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Origin': window.location.origin
             },
+            credentials: 'include',
             body: JSON.stringify(requestData)
         })
         .then(response => {
             console.log('Estado de la respuesta:', response.status);
+            console.log('Headers de la respuesta:', response.headers);
             if (!response.ok) {
                 return response.text().then(text => {
+                    console.error('Error response text:', text);
                     throw new Error(`Error del servidor: ${response.status} - ${text}`);
                 });
             }
