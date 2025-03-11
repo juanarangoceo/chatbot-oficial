@@ -9,7 +9,7 @@ jQuery(document).ready(function($) {
     let isFirstOpen = true;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    console.log('Inicializando chatbot...');
+    console.log('Inicializando chatbot v1.0.1...');
 
     // Función para agregar mensajes al chat
     function addMessage(message, isUser = false) {
@@ -35,7 +35,7 @@ jQuery(document).ready(function($) {
     }
 
     // Función para enviar mensaje al servidor
-    function sendMessage(message) {
+    async function sendMessage(message) {
         if (!message || message.trim() === '') return;
         
         console.log('Enviando mensaje al servidor:', message);
@@ -43,46 +43,46 @@ jQuery(document).ready(function($) {
         input.prop('disabled', true);
         sendButton.prop('disabled', true);
 
-        const requestData = {
-            message: message,
-            history: chatHistory
-        };
+        try {
+            const requestData = {
+                message: message,
+                history: chatHistory
+            };
 
-        console.log('Datos a enviar:', requestData);
+            console.log('Datos a enviar:', requestData);
 
-        fetch('https://chatbot-oficial.onrender.com/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        })
-        .then(response => {
+            const response = await fetch('https://chatbot-oficial.onrender.com/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
             console.log('Estado de la respuesta:', response.status);
+
             if (!response.ok) {
                 throw new Error(`Error del servidor: ${response.status}`);
             }
-            return response.json();
-        })
-        .then(data => {
+
+            const data = await response.json();
             console.log('Datos recibidos:', data);
+
             if (data && data.response) {
                 addMessage(data.response, false);
             } else {
                 console.error('Respuesta inválida:', data);
                 addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error en la petición:', error);
             addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
-        })
-        .finally(() => {
+        } finally {
             input.prop('disabled', false);
             sendButton.prop('disabled', false);
             input.focus();
-        });
+        }
     }
 
     // Manejar el envío de mensajes
@@ -152,15 +152,23 @@ jQuery(document).ready(function($) {
     });
 
     // Guardar estado del chat en localStorage
-    const chatState = localStorage.getItem('chatbotState');
-    if (chatState === 'open') {
-        toggleChat();
+    try {
+        const chatState = localStorage.getItem('chatbotState');
+        if (chatState === 'open') {
+            toggleChat();
+        }
+    } catch (error) {
+        console.warn('No se pudo acceder a localStorage:', error);
     }
 
     // Actualizar estado en localStorage
     function updateChatState() {
-        const state = chatbotContainer.hasClass('minimized') ? 'closed' : 'open';
-        localStorage.setItem('chatbotState', state);
+        try {
+            const state = chatbotContainer.hasClass('minimized') ? 'closed' : 'open';
+            localStorage.setItem('chatbotState', state);
+        } catch (error) {
+            console.warn('No se pudo guardar en localStorage:', error);
+        }
     }
 
     chatLauncher.on('click', updateChatState);
