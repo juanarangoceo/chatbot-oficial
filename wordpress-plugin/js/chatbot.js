@@ -36,7 +36,10 @@ jQuery(document).ready(function($) {
 
     // Función para enviar mensaje al servidor
     function sendMessage(message) {
-        console.log('Iniciando envío de mensaje:', message);
+        if (!message || message.trim() === '') return;
+        
+        console.log('Enviando mensaje:', message);
+        console.log('Chat history:', chatHistory);
         
         input.prop('disabled', true);
         sendButton.prop('disabled', true);
@@ -123,7 +126,12 @@ jQuery(document).ready(function($) {
     });
 
     // Manejar la visibilidad del chatbot
-    function toggleChat() {
+    function toggleChat(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
         chatbotContainer.toggleClass('minimized');
         chatLauncher.toggleClass('hidden');
         
@@ -149,20 +157,27 @@ jQuery(document).ready(function($) {
     }
 
     // Event listeners para abrir/cerrar el chat
-    chatLauncher.on('click touchend', function(e) {
+    chatLauncher.on('click touchstart', function(e) {
         e.preventDefault();
-        toggleChat();
+        toggleChat(e);
     });
 
-    toggleButton.on('click touchend', function(e) {
+    toggleButton.on('click touchstart', function(e) {
         e.preventDefault();
-        toggleChat();
+        toggleChat(e);
     });
 
     // Manejar el resize de la ventana
     $(window).on('resize', function() {
         if (isMobile && !chatbotContainer.hasClass('minimized')) {
             messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+        }
+    });
+
+    // Prevenir que el toque en el contenedor del chat cierre el teclado móvil
+    chatbotContainer.on('touchstart', function(e) {
+        if (!$(e.target).is(input) && !$(e.target).is(sendButton)) {
+            e.preventDefault();
         }
     });
 
@@ -183,8 +198,8 @@ jQuery(document).ready(function($) {
         localStorage.setItem('chatbotState', state);
     }
 
-    chatLauncher.on('click touchend', updateChatState);
-    toggleButton.on('click touchend', updateChatState);
+    chatLauncher.on('click touchstart', updateChatState);
+    toggleButton.on('click touchstart', updateChatState);
 
     console.log('Chatbot inicializado correctamente');
 }); 
