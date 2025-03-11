@@ -154,7 +154,7 @@ jQuery(document).ready(function($) {
     // Guardar estado del chat en localStorage
     try {
         const chatState = localStorage.getItem('chatbotState');
-        if (chatState === 'open') {
+        if (chatState === 'open' && document.referrer === window.location.href) {
             toggleChat();
         }
     } catch (error) {
@@ -173,6 +173,31 @@ jQuery(document).ready(function($) {
 
     chatLauncher.on('click', updateChatState);
     toggleButton.on('click', updateChatState);
+
+    // Detectar si es dispositivo móvil para ajustes específicos
+    if (isMobile) {
+        // Ajustar altura en móviles
+        function adjustHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+            
+            if (!chatbotContainer.hasClass('minimized')) {
+                messagesContainer.css('height', `calc(${window.innerHeight}px - 130px)`);
+            }
+        }
+
+        // Ajustar altura cuando cambia la orientación o el teclado se muestra/oculta
+        window.addEventListener('resize', adjustHeight);
+        window.addEventListener('orientationchange', adjustHeight);
+        adjustHeight();
+
+        // Prevenir el scroll del body cuando el chat está abierto
+        chatbotContainer.on('touchmove', function(e) {
+            if (!$(e.target).closest('.chatbot-messages').length) {
+                e.preventDefault();
+            }
+        });
+    }
 
     console.log('Chatbot inicializado correctamente');
 }); 
