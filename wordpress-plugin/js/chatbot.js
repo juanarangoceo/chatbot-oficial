@@ -1,27 +1,15 @@
 jQuery(document).ready(function($) {
-    console.log('Inicializando chatbot v1.0.9...');
+    console.log('Inicializando chatbot v1.0.7...');
     
     const chatLauncher = $('#chat-launcher');
     const chatbotContainer = $('#chatbot-container');
     const messagesContainer = $('.chatbot-messages');
     const input = $('.chatbot-input input');
     const sendButton = $('.chatbot-send');
-    const toggleButton = $('.chatbot-toggle');
-    const typingIndicator = $('.typing-indicator');
+    const toggleButton = $('#chatbot-close-btn');
     let chatHistory = [];
     let isFirstOpen = true;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    // Función para mostrar el indicador de escritura
-    function showTypingIndicator() {
-        typingIndicator.css('display', 'flex');
-        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-    }
-
-    // Función para ocultar el indicador de escritura
-    function hideTypingIndicator() {
-        typingIndicator.css('display', 'none');
-    }
 
     // Función para agregar mensajes al chat
     function addMessage(message, isUser = false) {
@@ -30,7 +18,6 @@ jQuery(document).ready(function($) {
             .addClass(isUser ? 'user' : 'bot')
             .text(message);
         
-        hideTypingIndicator();
         messagesContainer.append(messageElement);
         messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
         
@@ -38,6 +25,12 @@ jQuery(document).ready(function($) {
             role: isUser ? 'user' : 'assistant',
             content: message
         });
+
+        if (isMobile) {
+            setTimeout(() => {
+                messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+            }, 100);
+        }
     }
 
     // Función para enviar mensaje al servidor
@@ -46,7 +39,6 @@ jQuery(document).ready(function($) {
         
         input.prop('disabled', true);
         sendButton.prop('disabled', true);
-        showTypingIndicator();
 
         try {
             const response = await fetch('https://chatbot-oficial.onrender.com/chat', {
@@ -75,7 +67,6 @@ jQuery(document).ready(function($) {
             console.error('Error en la petición:', error);
             addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
         } finally {
-            hideTypingIndicator();
             input.prop('disabled', false);
             sendButton.prop('disabled', false);
             input.val('').focus();
@@ -131,6 +122,18 @@ jQuery(document).ready(function($) {
         toggleChat();
     });
 
+    // Mejorar el scroll en móviles
+    messagesContainer.on('touchstart', function(e) {
+        e.stopPropagation();
+    });
+
+    // Manejar el resize de la ventana
+    $(window).on('resize', function() {
+        if (isMobile && !chatbotContainer.hasClass('minimized')) {
+            messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+        }
+    });
+
     // Ajustar altura en dispositivos móviles
     function adjustMobileHeight() {
         const vh = window.innerHeight * 0.01;
@@ -140,29 +143,6 @@ jQuery(document).ready(function($) {
     window.addEventListener('resize', adjustMobileHeight);
     window.addEventListener('orientationchange', adjustMobileHeight);
     adjustMobileHeight();
-
-    // Guardar estado del chat en localStorage
-    try {
-        const chatState = localStorage.getItem('chatbotState');
-        if (chatState === 'open' && document.referrer === window.location.href) {
-            toggleChat();
-        }
-    } catch (error) {
-        console.warn('No se pudo acceder a localStorage:', error);
-    }
-
-    // Actualizar estado en localStorage
-    function updateChatState() {
-        try {
-            const state = chatbotContainer.hasClass('minimized') ? 'closed' : 'open';
-            localStorage.setItem('chatbotState', state);
-        } catch (error) {
-            console.warn('No se pudo guardar en localStorage:', error);
-        }
-    }
-
-    chatLauncher.on('click', updateChatState);
-    toggleButton.on('click', updateChatState);
 
     console.log('Chatbot inicializado correctamente');
 }); 

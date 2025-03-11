@@ -99,10 +99,6 @@
     z-index: 1001 !important;
 }
 
-.chatbot-toggle::before {
-    content: "Cerrar" !important;
-}
-
 .chatbot-toggle:hover {
     background: rgba(255,255,255,0.3) !important;
 }
