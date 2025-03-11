@@ -38,7 +38,7 @@ jQuery(document).ready(function($) {
     function sendMessage(message) {
         if (!message || message.trim() === '') return;
         
-        console.log('Enviando mensaje:', message);
+        console.log('Iniciando envío de mensaje:', message);
         console.log('Chat history:', chatHistory);
         
         input.prop('disabled', true);
@@ -51,7 +51,7 @@ jQuery(document).ready(function($) {
 
         console.log('Datos a enviar:', requestData);
         
-        fetch('https://chatbot-open-ai.onrender.com/chat', {
+        fetch('https://chatbot-oficial.onrender.com/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -60,9 +60,14 @@ jQuery(document).ready(function($) {
             body: JSON.stringify(requestData)
         })
         .then(response => {
-            console.log('Respuesta recibida del servidor:', response);
+            console.log('Estado de la respuesta:', response.status);
+            console.log('Headers de la respuesta:', Object.fromEntries(response.headers.entries()));
+            
             if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
+                console.error('Error HTTP:', response.status);
+                return response.text().then(text => {
+                    throw new Error(`Error del servidor: ${response.status} - ${text}`);
+                });
             }
             return response.json();
         })
@@ -76,7 +81,8 @@ jQuery(document).ready(function($) {
             }
         })
         .catch(error => {
-            console.error('Error en la petición:', error);
+            console.error('Error detallado:', error);
+            console.error('Stack trace:', error.stack);
             addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
         })
         .finally(() => {

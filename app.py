@@ -8,7 +8,15 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Habilitar CORS para todas las rutas
+# Configuración más específica de CORS
+CORS(app, resources={
+    r"/chat": {
+        "origins": "*",
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # HTML template para la página de prueba
@@ -224,11 +232,10 @@ def home():
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
     if request.method == 'OPTIONS':
-        # Manejar la solicitud preflight OPTIONS
         response = jsonify({'status': 'ok'})
         response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
         return response
 
     try:
