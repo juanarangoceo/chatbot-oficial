@@ -4,7 +4,7 @@ Plugin Name: Juan - Chatbot Barista
 Description: Chatbot especializado en ventas de máquinas de café con OpenAI
 Version: 1.0
 Author: Juan Arango
-Plugin URI: https://chatbot-open-ai.onrender.com
+Plugin URI: https://chatbot-oficial.onrender.com
 */
 
 // Prevenir acceso directo al archivo
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definir la URL del servidor del chatbot
-define('CHATBOT_SERVER_URL', 'https://chatbot-open-ai.onrender.com/chat');
+define('CHATBOT_SERVER_URL', 'https://chatbot-oficial.onrender.com/chat');
 
 // Agregar menú de administración
 function chatbot_ventas_admin_menu() {
@@ -68,8 +68,8 @@ function chatbot_ventas_add_container() {
     <!-- Botón launcher del chatbot -->
     <div class="chat-launcher" id="chat-launcher">
         <svg class="chat-launcher-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" fill="currentColor"/>
-            <path d="M6 12h12v2H6zm0-3h12v2H6zm0-3h12v2H6z" fill="currentColor"/>
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+            <path d="M6 12h12v2H6zm0-3h12v2H6zm0-3h12v2H6z"/>
         </svg>
     </div>
 

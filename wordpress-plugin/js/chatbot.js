@@ -9,7 +9,7 @@ jQuery(document).ready(function($) {
     let isFirstOpen = true;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    console.log('Dispositivo móvil:', isMobile);
+    console.log('Inicializando chatbot...');
 
     // Función para agregar mensajes al chat
     function addMessage(message, isUser = false) {
@@ -39,7 +39,6 @@ jQuery(document).ready(function($) {
         if (!message || message.trim() === '') return;
         
         console.log('Iniciando envío de mensaje:', message);
-        console.log('Chat history:', chatHistory);
         
         input.prop('disabled', true);
         sendButton.prop('disabled', true);
@@ -61,10 +60,7 @@ jQuery(document).ready(function($) {
         })
         .then(response => {
             console.log('Estado de la respuesta:', response.status);
-            console.log('Headers de la respuesta:', Object.fromEntries(response.headers.entries()));
-            
             if (!response.ok) {
-                console.error('Error HTTP:', response.status);
                 return response.text().then(text => {
                     throw new Error(`Error del servidor: ${response.status} - ${text}`);
                 });
@@ -75,28 +71,22 @@ jQuery(document).ready(function($) {
             console.log('Datos recibidos:', data);
             if (data && data.response) {
                 addMessage(data.response, false);
+            } else if (data && data.error) {
+                console.error('Error del servidor:', data.error);
+                addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
             } else {
                 console.error('Respuesta inválida:', data);
                 addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
             }
         })
         .catch(error => {
-            console.error('Error detallado:', error);
-            console.error('Stack trace:', error.stack);
+            console.error('Error en la petición:', error);
             addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
         })
         .finally(() => {
-            console.log('Petición finalizada');
             input.prop('disabled', false);
             sendButton.prop('disabled', false);
-            if (isMobile) {
-                input.focus();
-                setTimeout(() => {
-                    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-                }, 100);
-            } else {
-                input.focus();
-            }
+            input.focus();
         });
     }
 
@@ -108,8 +98,6 @@ jQuery(document).ready(function($) {
         }
         
         const message = input.val().trim();
-        console.log('Manejando envío de mensaje:', message);
-        
         if (message) {
             addMessage(message, true);
             input.val('');
@@ -117,13 +105,9 @@ jQuery(document).ready(function($) {
         }
     }
 
-    // Event listeners para enviar mensajes
-    sendButton.on('click touchstart', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleSend();
-    });
-
+    // Event listeners
+    sendButton.on('click', handleSend);
+    
     input.on('keypress', function(e) {
         if (e.key === 'Enter' || e.keyCode === 13) {
             e.preventDefault();
@@ -131,7 +115,6 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Manejar la visibilidad del chatbot
     function toggleChat(e) {
         if (e) {
             e.preventDefault();
@@ -146,32 +129,12 @@ jQuery(document).ready(function($) {
                 addMessage('¡Hola! Soy Juan, tu barista y asesor experto en café. ¿En qué ciudad te encuentras para verificar la disponibilidad de envío gratuito? 😊', false);
                 isFirstOpen = false;
             }
-            
-            // En móviles, ajustar el scroll y el body
-            if (isMobile) {
-                $('body').addClass('chatbot-open');
-                setTimeout(() => {
-                    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-                    input.focus();
-                }, 300);
-            } else {
-                input.focus();
-            }
-        } else {
-            $('body').removeClass('chatbot-open');
+            input.focus();
         }
     }
 
-    // Event listeners para abrir/cerrar el chat
-    chatLauncher.on('click touchstart', function(e) {
-        e.preventDefault();
-        toggleChat(e);
-    });
-
-    toggleButton.on('click touchstart', function(e) {
-        e.preventDefault();
-        toggleChat(e);
-    });
+    chatLauncher.on('click', toggleChat);
+    toggleButton.on('click', toggleChat);
 
     // Manejar el resize de la ventana
     $(window).on('resize', function() {
@@ -204,8 +167,8 @@ jQuery(document).ready(function($) {
         localStorage.setItem('chatbotState', state);
     }
 
-    chatLauncher.on('click touchstart', updateChatState);
-    toggleButton.on('click touchstart', updateChatState);
+    chatLauncher.on('click', updateChatState);
+    toggleButton.on('click', updateChatState);
 
     console.log('Chatbot inicializado correctamente');
 }); 
