@@ -6,7 +6,7 @@ jQuery(document).ready(function($) {
     const messagesContainer = $('.chatbot-messages');
     const input = $('.chatbot-input input');
     const sendButton = $('.chatbot-send');
-    const toggleButton = $('#chatbot-close-btn');
+    const toggleButton = $('.chatbot-toggle');
     const typingIndicator = $('.typing-indicator');
     let chatHistory = [];
     let isFirstOpen = true;
