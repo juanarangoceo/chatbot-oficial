@@ -160,7 +160,7 @@ def extract_customer_data(messages):
         if message['role'] == 'user':
             content = message['content'].lower()
             
-            # Buscar datos en el formato esperado
+            # Intentar formato con ":"
             if 'nombre:' in content:
                 lines = content.split('\n')
                 for line in lines:
@@ -179,7 +179,21 @@ def extract_customer_data(messages):
                     elif 'direccion:' in line or 'dirección:' in line:
                         customer_data['direccion'] = line.split(':')[1].strip()
                 break
+            
+            # Intentar formato con comas
+            elif ',' in content:
+                parts = [part.strip() for part in content.split(',')]
+                if len(parts) >= 7:  # Asegurarse de que tenemos todos los datos
+                    customer_data['nombre'] = parts[0]
+                    customer_data['apellido'] = parts[1]
+                    customer_data['email'] = parts[2]
+                    customer_data['telefono'] = parts[3]
+                    customer_data['departamento'] = parts[4]
+                    customer_data['ciudad'] = parts[5]
+                    customer_data['direccion'] = parts[6]
+                break
 
+    print(f"Datos extraídos del cliente: {customer_data}")
     return customer_data
 
 # HTML template para la página de prueba
