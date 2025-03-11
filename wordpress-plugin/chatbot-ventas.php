@@ -59,10 +59,6 @@ function chatbot_ventas_admin_page() {
 function chatbot_ventas_enqueue_scripts() {
     wp_enqueue_style('chatbot-styles', plugins_url('css/chatbot.css', __FILE__));
     wp_enqueue_script('chatbot-script', plugins_url('js/chatbot.js', __FILE__), array('jquery'), '1.0', true);
-    wp_localize_script('chatbot-script', 'chatbotAjax', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('chatbot_nonce')
-    ));
 }
 add_action('wp_enqueue_scripts', 'chatbot_ventas_enqueue_scripts');
 
