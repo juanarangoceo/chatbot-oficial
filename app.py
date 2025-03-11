@@ -26,7 +26,8 @@ wcapi = API(
     url="https://sandybrown-caribou-946075.hostingersite.com",
     consumer_key=os.getenv('WC_CONSUMER_KEY'),
     consumer_secret=os.getenv('WC_CONSUMER_SECRET'),
-    version="wc/v3"
+    version="wc/v3",
+    timeout=30
 )
 
 def create_woocommerce_order(customer_data):
@@ -34,10 +35,24 @@ def create_woocommerce_order(customer_data):
     Crear un pedido en WooCommerce con los datos del cliente
     """
     try:
+        print(f"Intentando crear pedido con datos: {customer_data}")
+        
+        # Verificar conexión con WooCommerce
+        try:
+            print("Verificando conexión con WooCommerce...")
+            products = wcapi.get("products").json()
+            print(f"Conexión exitosa. Productos encontrados: {len(products)}")
+        except Exception as e:
+            print(f"Error al conectar con WooCommerce: {str(e)}")
+            return None
+
         # Crear el cliente si no existe
+        print("Buscando cliente existente...")
         customers = wcapi.get("customers", params={"email": customer_data['email']}).json()
+        print(f"Resultado búsqueda de cliente: {customers}")
         
         if not customers:
+            print("Cliente no encontrado, creando nuevo cliente...")
             # Crear nuevo cliente
             customer = {
                 "email": customer_data['email'],
@@ -62,12 +77,16 @@ def create_woocommerce_order(customer_data):
                     "country": "CO"
                 }
             }
+            print(f"Datos del nuevo cliente: {customer}")
             customer_response = wcapi.post("customers", customer).json()
+            print(f"Respuesta creación cliente: {customer_response}")
             customer_id = customer_response['id']
         else:
             customer_id = customers[0]['id']
+            print(f"Cliente existente encontrado, ID: {customer_id}")
 
         # Crear el pedido
+        print("Creando pedido...")
         order_data = {
             "customer_id": customer_id,
             "payment_method": "cod",
@@ -105,10 +124,18 @@ def create_woocommerce_order(customer_data):
                 }
             ]
         }
-
+        print(f"Datos del pedido a crear: {order_data}")
+        
         # Crear el pedido en WooCommerce
         order = wcapi.post("orders", order_data).json()
-        return order['id']
+        print(f"Respuesta creación pedido: {order}")
+        
+        if 'id' in order:
+            print(f"Pedido creado exitosamente con ID: {order['id']}")
+            return order['id']
+        else:
+            print(f"Error al crear pedido: {order}")
+            return None
 
     except Exception as e:
         print(f"Error creando pedido en WooCommerce: {str(e)}")
