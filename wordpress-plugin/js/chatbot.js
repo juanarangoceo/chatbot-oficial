@@ -10,7 +10,6 @@ jQuery(document).ready(function($) {
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     console.log('Inicializando chatbot...');
-    console.log('Configuración del chatbot:', window.chatbotConfig);
 
     // Función para agregar mensajes al chat
     function addMessage(message, isUser = false) {
@@ -39,46 +38,50 @@ jQuery(document).ready(function($) {
     function sendMessage(message) {
         if (!message || message.trim() === '') return;
         
-        console.log('Iniciando envío de mensaje:', message);
+        console.log('Enviando mensaje al servidor:', message);
         
         input.prop('disabled', true);
         sendButton.prop('disabled', true);
 
         const requestData = {
-            action: 'chatbot_message',
             message: message,
-            history: chatHistory,
-            nonce: window.chatbotConfig.nonce
+            history: chatHistory
         };
 
         console.log('Datos a enviar:', requestData);
-        
-        // Usar el endpoint de WordPress AJAX
-        $.ajax({
-            url: window.chatbotConfig.ajaxUrl,
+
+        fetch('https://chatbot-oficial.onrender.com/chat', {
             method: 'POST',
-            data: requestData,
-            dataType: 'json',
-            success: function(response) {
-                console.log('Respuesta recibida:', response);
-                if (response.success && response.data) {
-                    addMessage(response.data.response, false);
-                } else {
-                    console.error('Error en la respuesta:', response);
-                    addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
-                }
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
-            error: function(xhr, status, error) {
-                console.error('Error en la petición:', error);
-                console.error('Estado:', status);
-                console.error('XHR:', xhr);
-                addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
-            },
-            complete: function() {
-                input.prop('disabled', false);
-                sendButton.prop('disabled', false);
-                input.focus();
+            body: JSON.stringify(requestData)
+        })
+        .then(response => {
+            console.log('Estado de la respuesta:', response.status);
+            if (!response.ok) {
+                throw new Error(`Error del servidor: ${response.status}`);
             }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos recibidos:', data);
+            if (data && data.response) {
+                addMessage(data.response, false);
+            } else {
+                console.error('Respuesta inválida:', data);
+                addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
+            }
+        })
+        .catch(error => {
+            console.error('Error en la petición:', error);
+            addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
+        })
+        .finally(() => {
+            input.prop('disabled', false);
+            sendButton.prop('disabled', false);
+            input.focus();
         });
     }
 
@@ -91,6 +94,7 @@ jQuery(document).ready(function($) {
         
         const message = input.val().trim();
         if (message) {
+            console.log('Mensaje a enviar:', message);
             addMessage(message, true);
             input.val('');
             sendMessage(message);
