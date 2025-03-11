@@ -94,6 +94,14 @@
     font-weight: 600 !important;
     min-width: 80px !important;
     touch-action: manipulation !important;
+    position: relative !important;
+    outline: none !important;
+}
+
+.chatbot-toggle::before {
+    content: "Cerrar" !important;
+    display: block !important;
+    pointer-events: none !important;
 }
 
 .chatbot-toggle:hover {
@@ -286,6 +294,15 @@
         height: 50px !important;
         bottom: 20px !important;
         right: 20px !important;
+    }
+
+    .chatbot-toggle {
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -webkit-touch-callout: none !important;
+        touch-action: manipulation !important;
+        cursor: pointer !important;
     }
 }
 

@@ -111,13 +111,12 @@ jQuery(document).ready(function($) {
         }
     });
 
-    function toggleChat(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
+    function toggleChat(event) {
         console.log('Toggle chat llamado');
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
         chatbotContainer.toggleClass('minimized');
         chatLauncher.toggleClass('hidden');
         
@@ -130,35 +129,42 @@ jQuery(document).ready(function($) {
         }
     }
 
-    // Event listeners para el botón de cerrar
-    if (isMobile) {
-        toggleButton.on('touchstart', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleChat();
+    // Mejorar el manejo de eventos táctiles
+    if (toggleButton) {
+        ['click', 'touchend'].forEach(eventType => {
+            toggleButton.addEventListener(eventType, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleChat(e);
+            }, { passive: false });
         });
     }
 
-    chatLauncher.on('click touchstart', toggleChat);
-    toggleButton.on('click', toggleChat);
+    if (chatLauncher) {
+        ['click', 'touchend'].forEach(eventType => {
+            chatLauncher.addEventListener(eventType, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleChat(e);
+            }, { passive: false });
+        });
+    }
+
+    // Prevenir el scroll cuando se toca el contenedor
+    if (chatbotContainer) {
+        chatbotContainer.addEventListener('touchstart', function(e) {
+            if (e.target.closest('.chatbot-toggle')) {
+                return; // Permitir eventos en el botón de cerrar
+            }
+            e.stopPropagation();
+        }, { passive: true });
+    }
 
     // Manejar el resize de la ventana
     $(window).on('resize', function() {
         if (isMobile && !chatbotContainer.hasClass('minimized')) {
             messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
         }
-    });
-
-    // Prevenir que el toque en el contenedor del chat cierre el teclado móvil
-    chatbotContainer.on('touchstart', function(e) {
-        if (!$(e.target).is(input) && !$(e.target).is(sendButton) && !$(e.target).is(toggleButton)) {
-            e.preventDefault();
-        }
-    });
-
-    // Manejar el scroll del contenedor de mensajes
-    messagesContainer.on('touchstart', function() {
-        messagesContainer.css('overflow-y', 'auto');
     });
 
     // Guardar estado del chat en localStorage
