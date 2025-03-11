@@ -100,7 +100,7 @@
 }
 
 .chatbot-toggle::before {
-    content: none !important;
+    content: "Cerrar" !important;
 }
 
 .chatbot-toggle:hover {
