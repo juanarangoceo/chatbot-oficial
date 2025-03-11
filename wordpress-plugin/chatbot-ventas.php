@@ -101,6 +101,17 @@ function chatbot_ventas_add_container() {
             <button class="chatbot-send">Enviar</button>
         </div>
     </div>
+
+    <script>
+    function adjustMobileHeight() {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    
+    window.addEventListener('resize', adjustMobileHeight);
+    window.addEventListener('orientationchange', adjustMobileHeight);
+    adjustMobileHeight();
+    </script>
     <?php
 }
 add_action('wp_footer', 'chatbot_ventas_add_container');
