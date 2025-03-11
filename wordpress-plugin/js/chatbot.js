@@ -1,5 +1,5 @@
 jQuery(document).ready(function($) {
-    console.log('Inicializando chatbot v1.0.7...');
+    console.log('Inicializando chatbot v1.0.8...');
     
     const chatLauncher = $('#chat-launcher');
     const chatbotContainer = $('#chatbot-container');
@@ -7,9 +7,21 @@ jQuery(document).ready(function($) {
     const input = $('.chatbot-input input');
     const sendButton = $('.chatbot-send');
     const toggleButton = $('#chatbot-close-btn');
+    const typingIndicator = $('.typing-indicator');
     let chatHistory = [];
     let isFirstOpen = true;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    // Función para mostrar el indicador de escritura
+    function showTypingIndicator() {
+        typingIndicator.css('display', 'flex');
+        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+    }
+
+    // Función para ocultar el indicador de escritura
+    function hideTypingIndicator() {
+        typingIndicator.css('display', 'none');
+    }
 
     // Función para agregar mensajes al chat
     function addMessage(message, isUser = false) {
@@ -19,6 +31,7 @@ jQuery(document).ready(function($) {
             .addClass(isUser ? 'user' : 'bot')
             .text(message);
         
+        hideTypingIndicator();
         messagesContainer.append(messageElement);
         messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
         
@@ -42,6 +55,7 @@ jQuery(document).ready(function($) {
         
         input.prop('disabled', true);
         sendButton.prop('disabled', true);
+        showTypingIndicator();
 
         try {
             const requestData = {
@@ -77,6 +91,7 @@ jQuery(document).ready(function($) {
             }
         } catch (error) {
             console.error('Error en la petición:', error);
+            hideTypingIndicator();
             addMessage('Lo siento, hubo un error en la comunicación. Por favor, intenta de nuevo.');
         } finally {
             input.prop('disabled', false);

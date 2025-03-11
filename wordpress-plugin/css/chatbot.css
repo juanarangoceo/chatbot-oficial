@@ -201,6 +201,43 @@
     }
 }
 
+/* Estilos para el indicador de escritura */
+.typing-indicator {
+    background-color: #007bff !important;
+    padding: 10px 15px !important;
+    border-radius: 15px !important;
+    margin-bottom: 10px !important;
+    width: fit-content !important;
+    display: none !important;
+    align-items: center !important;
+    animation: fadeIn 0.3s ease !important;
+}
+
+.typing-indicator span {
+    height: 8px !important;
+    width: 8px !important;
+    background: #ffffff !important;
+    display: block !important;
+    border-radius: 50% !important;
+    margin: 0 2px !important;
+    animation: typing 1s infinite !important;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: 0.1s !important; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s !important; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.3s !important; }
+
+@keyframes typing {
+    0%, 100% {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+    50% {
+        transform: scale(0.7) !important;
+        opacity: 0.7 !important;
+    }
+}
+
 /* Estilos responsivos */
 @media (max-width: 768px) {
     html, body {

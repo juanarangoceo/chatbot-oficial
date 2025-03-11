@@ -95,7 +95,14 @@ function chatbot_ventas_add_container() {
             <h3>Juan - Tu Barista Virtual</h3>
             <button type="button" id="chatbot-close-btn" class="chatbot-toggle">Cerrar</button>
         </div>
-        <div class="chatbot-messages"></div>
+        <div class="chatbot-messages">
+            <!-- Indicador de escritura -->
+            <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
         <div class="chatbot-input">
             <input type="text" placeholder="Escribe tu mensaje aquí...">
             <button class="chatbot-send">Enviar</button>
