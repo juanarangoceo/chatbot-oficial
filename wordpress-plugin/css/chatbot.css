@@ -97,9 +97,6 @@
     position: relative !important;
     outline: none !important;
     z-index: 1001 !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -webkit-touch-callout: none !important;
 }
 
 .chatbot-toggle::before {
@@ -236,7 +233,6 @@
         transform: none !important;
         transition: transform 0.3s ease !important;
         z-index: 999999 !important;
-        background: #fff !important;
     }
 
     .chatbot-container.minimized {
@@ -249,9 +245,6 @@
         z-index: 1000 !important;
         padding: 10px 15px !important;
         background: #007bff !important;
-        touch-action: none !important;
-        user-select: none !important;
-        -webkit-user-select: none !important;
     }
 
     .chatbot-toggle {
@@ -264,16 +257,6 @@
         color: white !important;
         z-index: 1001 !important;
         touch-action: manipulation !important;
-        -webkit-tap-highlight-color: transparent !important;
-        cursor: pointer !important;
-        user-select: none !important;
-        -webkit-user-select: none !important;
-        -webkit-touch-callout: none !important;
-    }
-
-    .chatbot-toggle:active {
-        background: rgba(255,255,255,0.3) !important;
-        transform: scale(0.95) !important;
     }
 
     .chatbot-messages {
@@ -281,7 +264,6 @@
         height: auto !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior: contain !important;
         padding: 15px !important;
         margin: 0 !important;
     }

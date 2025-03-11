@@ -57,34 +57,23 @@ function chatbot_ventas_admin_page() {
 
 // Agregar el script y estilos del chatbot
 function chatbot_ventas_enqueue_scripts() {
-    wp_enqueue_style('chatbot-styles', plugins_url('css/chatbot.css', __FILE__), array(), '1.0.2');
+    wp_enqueue_style('chatbot-styles', plugins_url('css/chatbot.css', __FILE__), array(), '1.0.3');
     
     // Desregistrar versiones anteriores del script si existen
     wp_deregister_script('chatbot-script');
-    wp_deregister_script('chatbot-mobile-handler');
     
     // Registrar y encolar el script principal
     wp_enqueue_script(
         'chatbot-script', 
         plugins_url('js/chatbot.js', __FILE__), 
         array('jquery'), 
-        '1.0.2', 
-        true
-    );
-
-    // Registrar y encolar el manejador móvil
-    wp_enqueue_script(
-        'chatbot-mobile-handler',
-        plugins_url('js/mobile-handler.js', __FILE__),
-        array('jquery', 'chatbot-script'),
-        '1.0.0',
+        '1.0.3', 
         true
     );
 
     // Pasar la URL del servidor al JavaScript
     wp_localize_script('chatbot-script', 'chatbotConfig', array(
-        'serverUrl' => CHATBOT_SERVER_URL,
-        'isMobile' => wp_is_mobile()
+        'serverUrl' => CHATBOT_SERVER_URL
     ));
 }
 add_action('wp_enqueue_scripts', 'chatbot_ventas_enqueue_scripts', 999);

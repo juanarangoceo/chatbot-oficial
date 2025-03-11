@@ -1,5 +1,5 @@
 jQuery(document).ready(function($) {
-    console.log('Inicializando chatbot v1.0.5...');
+    console.log('Inicializando chatbot v1.0.6...');
     
     const chatLauncher = $('#chat-launcher');
     const chatbotContainer = $('#chatbot-container');
@@ -113,11 +113,10 @@ jQuery(document).ready(function($) {
 
     // Función para manejar el cierre/apertura del chat
     function toggleChat(e) {
-        console.log('Toggle chat llamado');
         if (e) {
             e.preventDefault();
-            e.stopPropagation();
         }
+        console.log('Toggle chat llamado');
         chatbotContainer.toggleClass('minimized');
         chatLauncher.toggleClass('hidden');
         
@@ -130,34 +129,16 @@ jQuery(document).ready(function($) {
         }
     }
 
-    // Event listeners para el botón de cerrar en desktop
-    if (!isMobile) {
-        toggleButton.on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleChat();
-        });
+    // Event listeners simplificados
+    toggleButton.on('click touchstart', function(e) {
+        e.preventDefault();
+        toggleChat();
+    });
 
-        chatLauncher.on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleChat();
-        });
-    }
-
-    // Prevenir comportamiento por defecto en móviles
-    if (isMobile) {
-        toggleButton.on('touchmove', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-
-        chatbotContainer.on('touchmove', function(e) {
-            if (!$(e.target).closest('.chatbot-messages').length) {
-                e.preventDefault();
-            }
-        });
-    }
+    chatLauncher.on('click touchstart', function(e) {
+        e.preventDefault();
+        toggleChat();
+    });
 
     // Mejorar el scroll en móviles
     messagesContainer.on('touchstart', function(e) {
@@ -196,31 +177,12 @@ jQuery(document).ready(function($) {
 
     // Ajustar altura en dispositivos móviles
     function adjustMobileHeight() {
-        if (isMobile) {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-            
-            if (!chatbotContainer.hasClass('minimized')) {
-                setTimeout(() => {
-                    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-                }, 100);
-            }
-        }
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
 
-    // Event listeners para ajuste de altura
     $(window).on('resize orientationchange', adjustMobileHeight);
     adjustMobileHeight();
-
-    // Inicialización adicional para móviles
-    if (isMobile) {
-        $('body').css('overflow', 'hidden');
-        chatbotContainer.on('touchstart', function(e) {
-            if (!$(e.target).closest('.chatbot-messages, .chatbot-input, #chatbot-close-btn').length) {
-                e.preventDefault();
-            }
-        });
-    }
 
     console.log('Chatbot inicializado correctamente');
 }); 
