@@ -93,7 +93,7 @@ function chatbot_ventas_add_container() {
     <div id="chatbot-container" class="chatbot-container minimized">
         <div class="chatbot-header">
             <h3>Juan - Tu Barista Virtual</h3>
-            <button class="chatbot-toggle">×</button>
+            <button class="chatbot-toggle">Cerrar</button>
         </div>
         <div class="chatbot-messages"></div>
         <div class="chatbot-input">
