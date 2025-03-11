@@ -1,5 +1,5 @@
 jQuery(document).ready(function($) {
-    console.log('Inicializando chatbot v1.0.6...');
+    console.log('Inicializando chatbot v1.0.7...');
     
     const chatLauncher = $('#chat-launcher');
     const chatbotContainer = $('#chatbot-container');
@@ -120,12 +120,16 @@ jQuery(document).ready(function($) {
         chatbotContainer.toggleClass('minimized');
         chatLauncher.toggleClass('hidden');
         
+        // Manejar la clase chatbot-open en el body
         if (!chatbotContainer.hasClass('minimized')) {
+            $('body').addClass('chatbot-open');
             if (isFirstOpen) {
                 addMessage('¡Hola! Soy Juan, tu barista y asesor experto en café. ¿En qué ciudad te encuentras para verificar la disponibilidad de envío gratuito? 😊', false);
                 isFirstOpen = false;
             }
             input.focus();
+        } else {
+            $('body').removeClass('chatbot-open');
         }
     }
 

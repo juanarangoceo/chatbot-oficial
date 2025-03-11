@@ -100,9 +100,7 @@
 }
 
 .chatbot-toggle::before {
-    content: "Cerrar" !important;
-    display: block !important;
-    pointer-events: none !important;
+    content: none !important;
 }
 
 .chatbot-toggle:hover {
@@ -205,15 +203,14 @@
 
 /* Estilos responsivos */
 @media (max-width: 768px) {
-    :root {
-        --vh: 1vh;
-    }
-
     html, body {
         height: 100% !important;
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+    }
+
+    body.chatbot-open {
         overflow: hidden !important;
     }
 
@@ -233,6 +230,7 @@
         transform: none !important;
         transition: transform 0.3s ease !important;
         z-index: 999999 !important;
+        background: #fff !important;
     }
 
     .chatbot-container.minimized {

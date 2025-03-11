@@ -3,6 +3,8 @@ from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
 import os
+import requests
+from woocommerce import API
 
 # Cargar variables de entorno
 load_dotenv()
@@ -18,6 +20,140 @@ CORS(app, resources={
 })
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Configuración de WooCommerce
+wcapi = API(
+    url="https://sandybrown-caribou-946075.hostingersite.com",
+    consumer_key=os.getenv('WC_CONSUMER_KEY'),
+    consumer_secret=os.getenv('WC_CONSUMER_SECRET'),
+    version="wc/v3"
+)
+
+def create_woocommerce_order(customer_data):
+    """
+    Crear un pedido en WooCommerce con los datos del cliente
+    """
+    try:
+        # Crear el cliente si no existe
+        customers = wcapi.get("customers", params={"email": customer_data['email']}).json()
+        
+        if not customers:
+            # Crear nuevo cliente
+            customer = {
+                "email": customer_data['email'],
+                "first_name": customer_data['nombre'],
+                "last_name": customer_data['apellido'],
+                "billing": {
+                    "first_name": customer_data['nombre'],
+                    "last_name": customer_data['apellido'],
+                    "address_1": customer_data['direccion'],
+                    "city": customer_data['ciudad'],
+                    "state": customer_data['departamento'],
+                    "country": "CO",
+                    "email": customer_data['email'],
+                    "phone": customer_data['telefono']
+                },
+                "shipping": {
+                    "first_name": customer_data['nombre'],
+                    "last_name": customer_data['apellido'],
+                    "address_1": customer_data['direccion'],
+                    "city": customer_data['ciudad'],
+                    "state": customer_data['departamento'],
+                    "country": "CO"
+                }
+            }
+            customer_response = wcapi.post("customers", customer).json()
+            customer_id = customer_response['id']
+        else:
+            customer_id = customers[0]['id']
+
+        # Crear el pedido
+        order_data = {
+            "customer_id": customer_id,
+            "payment_method": "cod",
+            "payment_method_title": "Pago contra entrega",
+            "set_paid": False,
+            "billing": {
+                "first_name": customer_data['nombre'],
+                "last_name": customer_data['apellido'],
+                "address_1": customer_data['direccion'],
+                "city": customer_data['ciudad'],
+                "state": customer_data['departamento'],
+                "country": "CO",
+                "email": customer_data['email'],
+                "phone": customer_data['telefono']
+            },
+            "shipping": {
+                "first_name": customer_data['nombre'],
+                "last_name": customer_data['apellido'],
+                "address_1": customer_data['direccion'],
+                "city": customer_data['ciudad'],
+                "state": customer_data['departamento'],
+                "country": "CO"
+            },
+            "line_items": [
+                {
+                    "product_id": 112,
+                    "quantity": 1
+                }
+            ],
+            "shipping_lines": [
+                {
+                    "method_id": "free_shipping",
+                    "method_title": "Envío Gratis",
+                    "total": "0.00"
+                }
+            ]
+        }
+
+        # Crear el pedido en WooCommerce
+        order = wcapi.post("orders", order_data).json()
+        return order['id']
+
+    except Exception as e:
+        print(f"Error creando pedido en WooCommerce: {str(e)}")
+        return None
+
+def extract_customer_data(messages):
+    """
+    Extraer datos del cliente del historial de mensajes
+    """
+    customer_data = {
+        'nombre': None,
+        'apellido': None,
+        'email': None,
+        'telefono': None,
+        'departamento': None,
+        'ciudad': None,
+        'direccion': None
+    }
+    
+    # Buscar el último mensaje que contiene los datos del cliente
+    for message in reversed(messages):
+        if message['role'] == 'user':
+            content = message['content'].lower()
+            
+            # Buscar datos en el formato esperado
+            if 'nombre:' in content:
+                lines = content.split('\n')
+                for line in lines:
+                    if 'nombre:' in line:
+                        customer_data['nombre'] = line.split(':')[1].strip()
+                    elif 'apellido:' in line:
+                        customer_data['apellido'] = line.split(':')[1].strip()
+                    elif 'telefono:' in line or 'teléfono:' in line:
+                        customer_data['telefono'] = line.split(':')[1].strip()
+                    elif 'email:' in line or 'correo:' in line:
+                        customer_data['email'] = line.split(':')[1].strip()
+                    elif 'departamento:' in line:
+                        customer_data['departamento'] = line.split(':')[1].strip()
+                    elif 'ciudad:' in line:
+                        customer_data['ciudad'] = line.split(':')[1].strip()
+                    elif 'direccion:' in line or 'dirección:' in line:
+                        customer_data['direccion'] = line.split(':')[1].strip()
+                break
+
+    return customer_data
 
 # HTML template para la página de prueba
 HTML_TEMPLATE = """
@@ -206,18 +342,20 @@ PROTOCOLO DE INTERACCIÓN:
 
 4. Cuarta interacción (si decide comprar):
    - Confirma la buena elección
-   - Solicita datos en este formato:
-     1. Nombre 😊
-     2. Apellido 😊
-     3. Teléfono 📞
-     4. Departamento 🌄
-     5. Ciudad 🏙
-     6. Dirección 🏡
-     7. Color
+   - Solicita datos en este formato exacto:
+     Por favor, proporciona los siguientes datos:
+     1. Nombre: 😊
+     2. Apellido: 😊
+     3. Email: 📧
+     4. Teléfono: 📞
+     5. Departamento: 🌄
+     6. Ciudad: 🏙
+     7. Dirección: 🏡
 
 5. Quinta interacción:
-   - Verifica los datos proporcionados
-   - Confirma el pedido con "¡Todo confirmado! 🎉"
+   - Verifica que todos los datos estén completos
+   - Si falta algún dato, solicítalo nuevamente
+   - Si están completos, confirma con "¡Todo confirmado! 🎉"
 
 MANEJO DE OBJECIONES:
 - Precio: Enfatizar calidad, durabilidad y ahorro a largo plazo
@@ -243,28 +381,48 @@ def chat():
         user_message = data.get('message', '')
         chat_history = data.get('history', [])
 
-        print(f"Mensaje recibido: {user_message}")  # Log para debugging
-        print(f"Historial: {chat_history}")  # Log para debugging
+        print(f"Mensaje recibido: {user_message}")
+        print(f"Historial: {chat_history}")
 
-        # Preparar los mensajes para la API
+        # Verificar si es una confirmación de pedido
+        last_bot_message = None
+        for msg in reversed(chat_history):
+            if msg['role'] == 'assistant':
+                last_bot_message = msg['content']
+                break
+
+        # Si el último mensaje del bot pidió los datos y el usuario los proporcionó
+        if last_bot_message and "Por favor, proporciona los siguientes datos:" in last_bot_message:
+            # Extraer datos del cliente
+            customer_data = extract_customer_data(chat_history)
+            
+            # Verificar si tenemos todos los datos necesarios
+            if all(customer_data.values()):
+                # Crear pedido en WooCommerce
+                order_id = create_woocommerce_order(customer_data)
+                if order_id:
+                    confirmation_message = f"¡Excelente! He creado tu pedido #{order_id}. Pronto recibirás un correo con los detalles. ¿Hay algo más en lo que pueda ayudarte? 😊"
+                    return jsonify({
+                        "response": confirmation_message,
+                        "status": "success"
+                    })
+
+        # Continuar con el flujo normal del chat
         messages = [
             {"role": "system", "content": SISTEMA_PROMPT}
         ]
 
-        # Agregar historial de chat si existe
         for msg in chat_history:
             messages.append({
                 "role": msg["role"],
                 "content": msg["content"]
             })
 
-        # Agregar el mensaje actual del usuario
         messages.append({
             "role": "user",
             "content": user_message
         })
 
-        # Obtener respuesta de OpenAI
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
@@ -272,9 +430,8 @@ def chat():
             max_tokens=500
         )
 
-        # Extraer la respuesta
         bot_response = response.choices[0].message['content']
-        print(f"Respuesta del bot: {bot_response}")  # Log para debugging
+        print(f"Respuesta del bot: {bot_response}")
 
         return jsonify({
             "response": bot_response,
@@ -282,7 +439,7 @@ def chat():
         })
 
     except Exception as e:
-        print(f"Error: {str(e)}")  # Log para debugging
+        print(f"Error: {str(e)}")
         return jsonify({
             "error": str(e),
             "status": "error"
