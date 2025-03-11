@@ -9,7 +9,7 @@ jQuery(document).ready(function($) {
     let isFirstOpen = true;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    console.log('Inicializando chatbot v1.0.1...');
+    console.log('Inicializando chatbot v1.0.2...');
 
     // Función para agregar mensajes al chat
     function addMessage(message, isUser = false) {
@@ -117,6 +117,7 @@ jQuery(document).ready(function($) {
             e.stopPropagation();
         }
         
+        console.log('Toggle chat llamado');
         chatbotContainer.toggleClass('minimized');
         chatLauncher.toggleClass('hidden');
         
@@ -129,7 +130,16 @@ jQuery(document).ready(function($) {
         }
     }
 
-    chatLauncher.on('click', toggleChat);
+    // Event listeners para el botón de cerrar
+    if (isMobile) {
+        toggleButton.on('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleChat();
+        });
+    }
+
+    chatLauncher.on('click touchstart', toggleChat);
     toggleButton.on('click', toggleChat);
 
     // Manejar el resize de la ventana
@@ -141,7 +151,7 @@ jQuery(document).ready(function($) {
 
     // Prevenir que el toque en el contenedor del chat cierre el teclado móvil
     chatbotContainer.on('touchstart', function(e) {
-        if (!$(e.target).is(input) && !$(e.target).is(sendButton)) {
+        if (!$(e.target).is(input) && !$(e.target).is(sendButton) && !$(e.target).is(toggleButton)) {
             e.preventDefault();
         }
     });
