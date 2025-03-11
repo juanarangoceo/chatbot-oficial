@@ -37,58 +37,8 @@ def create_woocommerce_order(customer_data):
     try:
         print(f"Intentando crear pedido con datos: {customer_data}")
         
-        # Verificar conexión con WooCommerce
-        try:
-            print("Verificando conexión con WooCommerce...")
-            products = wcapi.get("products").json()
-            print(f"Conexión exitosa. Productos encontrados: {len(products)}")
-        except Exception as e:
-            print(f"Error al conectar con WooCommerce: {str(e)}")
-            return None
-
-        # Crear el cliente si no existe
-        print("Buscando cliente existente...")
-        customers = wcapi.get("customers", params={"email": customer_data['email']}).json()
-        print(f"Resultado búsqueda de cliente: {customers}")
-        
-        if not customers:
-            print("Cliente no encontrado, creando nuevo cliente...")
-            # Crear nuevo cliente
-            customer = {
-                "email": customer_data['email'],
-                "first_name": customer_data['nombre'],
-                "last_name": customer_data['apellido'],
-                "billing": {
-                    "first_name": customer_data['nombre'],
-                    "last_name": customer_data['apellido'],
-                    "address_1": customer_data['direccion'],
-                    "city": customer_data['ciudad'],
-                    "state": customer_data['departamento'],
-                    "country": "CO",
-                    "email": customer_data['email'],
-                    "phone": customer_data['telefono']
-                },
-                "shipping": {
-                    "first_name": customer_data['nombre'],
-                    "last_name": customer_data['apellido'],
-                    "address_1": customer_data['direccion'],
-                    "city": customer_data['ciudad'],
-                    "state": customer_data['departamento'],
-                    "country": "CO"
-                }
-            }
-            print(f"Datos del nuevo cliente: {customer}")
-            customer_response = wcapi.post("customers", customer).json()
-            print(f"Respuesta creación cliente: {customer_response}")
-            customer_id = customer_response['id']
-        else:
-            customer_id = customers[0]['id']
-            print(f"Cliente existente encontrado, ID: {customer_id}")
-
-        # Crear el pedido
-        print("Creando pedido...")
+        # Crear el pedido directamente sin crear cliente
         order_data = {
-            "customer_id": customer_id,
             "payment_method": "cod",
             "payment_method_title": "Pago contra entrega",
             "set_paid": False,
@@ -124,6 +74,7 @@ def create_woocommerce_order(customer_data):
                 }
             ]
         }
+        
         print(f"Datos del pedido a crear: {order_data}")
         
         # Crear el pedido en WooCommerce
@@ -158,30 +109,10 @@ def extract_customer_data(messages):
     # Buscar el último mensaje que contiene los datos del cliente
     for message in reversed(messages):
         if message['role'] == 'user':
-            content = message['content'].lower()
-            
-            # Intentar formato con ":"
-            if 'nombre:' in content:
-                lines = content.split('\n')
-                for line in lines:
-                    if 'nombre:' in line:
-                        customer_data['nombre'] = line.split(':')[1].strip()
-                    elif 'apellido:' in line:
-                        customer_data['apellido'] = line.split(':')[1].strip()
-                    elif 'telefono:' in line or 'teléfono:' in line:
-                        customer_data['telefono'] = line.split(':')[1].strip()
-                    elif 'email:' in line or 'correo:' in line:
-                        customer_data['email'] = line.split(':')[1].strip()
-                    elif 'departamento:' in line:
-                        customer_data['departamento'] = line.split(':')[1].strip()
-                    elif 'ciudad:' in line:
-                        customer_data['ciudad'] = line.split(':')[1].strip()
-                    elif 'direccion:' in line or 'dirección:' in line:
-                        customer_data['direccion'] = line.split(':')[1].strip()
-                break
+            content = message['content'].strip()
             
             # Intentar formato con comas
-            elif ',' in content:
+            if ',' in content:
                 parts = [part.strip() for part in content.split(',')]
                 if len(parts) >= 7:  # Asegurarse de que tenemos todos los datos
                     customer_data['nombre'] = parts[0]
@@ -191,10 +122,14 @@ def extract_customer_data(messages):
                     customer_data['departamento'] = parts[4]
                     customer_data['ciudad'] = parts[5]
                     customer_data['direccion'] = parts[6]
-                break
+                    break
 
     print(f"Datos extraídos del cliente: {customer_data}")
-    return customer_data
+    
+    # Verificar que todos los datos estén presentes y no sean None
+    if all(customer_data.values()):
+        return customer_data
+    return None
 
 # HTML template para la página de prueba
 HTML_TEMPLATE = """
@@ -433,18 +368,24 @@ def chat():
                 break
 
         # Si el último mensaje del bot pidió los datos y el usuario los proporcionó
-        if last_bot_message and "Por favor, proporciona los siguientes datos:" in last_bot_message:
+        if last_bot_message and "proporciona los siguientes datos" in last_bot_message:
             # Extraer datos del cliente
             customer_data = extract_customer_data(chat_history)
             
             # Verificar si tenemos todos los datos necesarios
-            if all(customer_data.values()):
+            if customer_data:
                 # Crear pedido en WooCommerce
                 order_id = create_woocommerce_order(customer_data)
                 if order_id:
-                    confirmation_message = f"¡Excelente! He creado tu pedido #{order_id}. Pronto recibirás un correo con los detalles. ¿Hay algo más en lo que pueda ayudarte? 😊"
+                    confirmation_message = f"¡Todo confirmado! 🎉 Tu pedido ha sido registrado con éxito. En breve recibirás tu Máquina para Café Automática RAf en {customer_data['ciudad']}. ¡Disfrutarás de excelentes espressos! ¿Hay algo más en lo que pueda ayudarte?"
                     return jsonify({
                         "response": confirmation_message,
+                        "status": "success"
+                    })
+                else:
+                    error_message = "Lo siento, hubo un problema al procesar tu pedido. Por favor, intenta nuevamente o contáctanos directamente."
+                    return jsonify({
+                        "response": error_message,
                         "status": "success"
                     })
 
